@@ -36,10 +36,11 @@ typing.
 4. Run the bot: `python telegram_bot_server.py`
 
 ## How to deploy to a Raspberry Pi
+
 1. Clone the project to your Raspberry Pi
 2. Set up a recent python version with `pyenv`, this might take a while.
 3. Install the requirements
-4. At this point you can just run the script with python or follow along to get automatic start of the server on 
+4. At this point you can just run the script with python or follow along to get automatic start of the server on
    reboots, crashes, etc.
 5. `sudo nano /etc/systemd/system/telegram_bot.service`
    ```shell
@@ -66,6 +67,15 @@ typing.
 
 - The bot is configured to work only with a predefined list of users.
 - All interactions are logged for security purposes.
+
+## How to set up the Telegram bot
+
+1. Use the `@BotFather` to create your bot. Provide it a unique ID that also shows that it's private.
+2. Pick a name for your bot, something simple like "Thought Keeper" that I picked.
+3. Set up the about and description sections.
+4. Set up the start and help commands (the actual command logic is in the code, just inform it that we support these
+   commands and a short about of it)
+5. Put a picture for your bot, can be generated with Dall-E.
 
 ## Contributing
 
