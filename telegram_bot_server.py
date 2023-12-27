@@ -11,6 +11,8 @@ from pydub import AudioSegment
 
 import json
 
+from message_texts import get_welcome_message, get_access_denied_message, get_help_message
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -24,15 +26,20 @@ ALLOWED_USERS = json.loads(os.getenv("ALLOWED_USERS"))
 
 async def authenticate(update: Update):
     if update.effective_user.id not in ALLOWED_USERS:
-        await update.effective_message.reply_text("You are not allowed to use this bot.")
+        await update.effective_message.reply_text(get_access_denied_message())
         raise Exception(
             f"User {update.effective_user.username} with id {update.effective_user.id} tried to use the bot.")
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await authenticate(update)
-    await update.message.reply_text(f'Hello {update.effective_user.first_name}, please send your audio messages here '
-                                    f'to transcribe')
+    response_message = get_welcome_message(update.effective_user.first_name)
+    await update.message.reply_text(response_message)
+
+
+async def handle_help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    response_message = get_help_message()
+    await update.message.reply_text(response_message)
 
 
 async def transcribe_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -72,12 +79,14 @@ def _convert_audio(input_file, file_format) -> io.BytesIO:
 
 async def text_message_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await authenticate(update)
-    await update.message.reply_text("Please send audio messages to transcribe")
+    await update.message.reply_text("Please send audio messages to transcribe. For more information check the /help "
+                                    "command")
 
 
 app = ApplicationBuilder().token(os.environ['TELEGRAM_BOT_API_KEY']).build()
 
-app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("start", handle_start_command))
+app.add_handler(CommandHandler("help", handle_help_command))
 app.add_handler(MessageHandler(filters.VOICE, transcribe_voice))
 app.add_handler(MessageHandler(filters.AUDIO, transcribe_audio))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_message_received))
