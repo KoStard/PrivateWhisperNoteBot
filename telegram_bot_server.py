@@ -31,7 +31,6 @@ async def authenticate(update: Update):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await authenticate(update)
-    print(update.effective_user.id)
     await update.message.reply_text(f'Hello {update.effective_user.first_name}, please send your audio messages here '
                                     f'to transcribe')
 
@@ -49,16 +48,27 @@ async def transcribe_audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 async def _handle_audio_file(update, file):
+    """
+    We are converting the received audio file to wav file, as sometimes some audio files are not accepted by whisper,
+    and it works better after converting to wav. This adds some latency, so we can tackle to receive some optimization.
+    """
     file_format = file.file_path.split(".")[-1]
     path = await file.download_to_drive(f"/tmp/{uuid.uuid4()}.{file_format}")
+    with open(path, 'rb') as downloaded_file:
+        converted_audio = _convert_audio(downloaded_file, file_format)
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=("test.wav", converted_audio.read())
+        )
+        await update.effective_message.reply_text(transcript.text)
+
+
+def _convert_audio(input_file, file_format) -> io.BytesIO:
     wav_io = io.BytesIO()
-    AudioSegment.from_file(open(path, 'rb'), type=file_format).export(wav_io, format="wav")
+    AudioSegment.from_file(input_file, type=file_format).export(wav_io, format="wav")
     wav_io.seek(0)
-    transcript = client.audio.transcriptions.create(
-        model="whisper-1",
-        file=("test.wav", wav_io.read())
-    )
-    await update.effective_message.reply_text(transcript.text)
+    return wav_io
+
 
 async def text_message_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await authenticate(update)
