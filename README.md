@@ -1,4 +1,4 @@
-# README for Thought Keeper
+# Thought Keeper
 
 Thought Keeper is a Telegram bot designed to make your life easier by converting audio messages into text. This bot is
 perfect for those who need to quickly capture their thoughts, ideas, or important information without the hassle of
