@@ -1,4 +1,5 @@
 import os
+import uuid
 
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
@@ -6,6 +7,7 @@ import dotenv
 import logging
 from openai import OpenAI
 import io
+from pydub import AudioSegment
 
 import json
 
@@ -37,31 +39,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def transcribe_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await authenticate(update)
     file = await update.message.voice.get_file()
-    binary_io = io.BytesIO()
-    await file.download_to_memory(binary_io)
-    binary_io.seek(0)
-    transcript = client.audio.transcriptions.create(
-        model="whisper-1",
-        file=("recording.oga", binary_io.read())
-    )
-    await update.effective_message.reply_text(transcript.text)
+    await _handle_audio_file(update, file)
 
 
 async def transcribe_audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await authenticate(update)
     file = await update.message.audio.get_file()
-    binary_io = io.BytesIO()
-    await file.download_to_memory(binary_io)
-    binary_io.seek(0)
-    print(file)
-    print(file.file_id)
-    print(file.file_path)
+    await _handle_audio_file(update, file)
+
+
+async def _handle_audio_file(update, file):
+    file_format = file.file_path.split(".")[-1]
+    path = await file.download_to_drive(f"/tmp/{uuid.uuid4()}.{file_format}")
+    wav_io = io.BytesIO()
+    AudioSegment.from_file(open(path, 'rb'), type=file_format).export(wav_io, format="wav")
+    wav_io.seek(0)
     transcript = client.audio.transcriptions.create(
         model="whisper-1",
-        file=(file.file_path, binary_io.read())
+        file=("test.wav", wav_io.read())
     )
     await update.effective_message.reply_text(transcript.text)
-
 
 async def text_message_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await authenticate(update)
