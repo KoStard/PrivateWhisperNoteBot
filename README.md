@@ -77,6 +77,9 @@ typing.
    commands and a short about of it)
 5. Put a picture for your bot, can be generated with Dall-E.
 
+## Known limitations
+1. Big files might cause failures as Whisper API has size limits on inputs.
+
 ## Contributing
 
 Contributions to improve Thought Keeper are welcome. Please fork the repository and submit a pull request with your
