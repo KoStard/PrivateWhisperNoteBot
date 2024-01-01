@@ -94,10 +94,9 @@ def _convert_audio(input_file, file_format) -> io.BytesIO:
     return mp3_io
 
 
-async def text_message_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await authenticate(update)
-    await update.message.reply_text("Please send audio messages to transcribe. For more information check the /help "
-                                    "command")
+async def invalid_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("This seems to be an invalid command. Please enter / to see the available "
+                                    "commands or use /help for more information about the bot.")
 
 
 app = ApplicationBuilder().token(os.environ['TELEGRAM_BOT_API_KEY']).build()
@@ -106,5 +105,5 @@ app.add_handler(CommandHandler("start", handle_start_command))
 app.add_handler(CommandHandler("help", handle_help_command))
 app.add_handler(MessageHandler(filters.VOICE, transcribe_voice))
 app.add_handler(MessageHandler(filters.AUDIO, transcribe_audio))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_message_received))
+app.add_handler(MessageHandler(filters.COMMAND, invalid_command_handler))
 app.run_polling()
